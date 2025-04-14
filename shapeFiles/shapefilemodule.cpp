@@ -20,6 +20,13 @@ static bool gb_ShowShapeFileDialog;
 
 bool LoadShapeFiles()
 {
+    puts(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    if (GetFileAttributes("shp") == INVALID_FILE_ATTRIBUTES)
+    {
+        puts("Shape Directory (\"shp\") doesn't exist");
+        return true;
+    }
+
     std::vector<std::string> fList = LoadFileNamesInFolder("shp", ".shp");
 
 

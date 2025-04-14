@@ -93,6 +93,8 @@ set(
 	Modules/POI.h
 	Modules/route.h
 	Modules/route.cpp
+	Modules/DtedFile.hpp
+	Modules/DtedFile.cpp
 		
 	shapeFiles/safileio.c
 	shapeFiles/shpopen.c
