@@ -3,11 +3,15 @@ Based on private repo: IM_RadarSites which in turn was based on these two repos:
 
 
 Dear IMGUI https://github.com/ocornut/imgui
+
 The slippy webmap tile code is based on the maps demo from https://github.com/epezent/implot_demos
 
 
 ### 14 Apr 2025 Version
 slippy map tile background with a single SRTM elevation grid shown.
+
+Started to add elevation features. Can import a single SRTM file, shows a winbdows with horizontal and verical terrain profiles.
+Shows a window with a zoomed in region of the SRTM file.
 
 ![image](https://github.com/user-attachments/assets/bfeccbae-7596-40ee-a252-722d2c8ad309)
 
