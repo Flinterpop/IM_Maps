@@ -56,7 +56,3 @@ cmake --build . --config Release
 ezpent's 'maps.cpp`is an OpenStreetMap world map viewer. Downloads and displays zoomable tile maps in a plot.
 maps](https://github.com/epezent/implot_demos/blob/master/screenshots/maps.png)
 
-
-### 19 Jan 2025 Version:
-![image](https://github.com/user-attachments/assets/0d117c05-403f-4f9c-abfa-0d54a78a4670)
-
