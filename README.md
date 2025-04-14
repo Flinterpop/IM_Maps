@@ -1,6 +1,10 @@
 # IM_Maps
 Based on private repo: IM_RadarSites
 
+This application is based on Dear IMGUI https://github.com/ocornut/imgui
+The slippy webmap tile code is based on the maps demo from https://github.com/epezent/implot_demos
+
+
 14 Apr 2025 Version
 slippy map tile background with a single SRTM elevation grid shown.
 
@@ -25,7 +29,7 @@ It was developed with ImGui v1.91.9 (Feb 2025) Docking branch. If you use a late
 ```shell
 mkdir root
 cd root
-git clone https://github.com/flinterpop/IM_RadarSites
+git clone https://github.com/flinterpop/IM_Maps
 git clone https://github.com/ocornut/imgui --branch=docking
 ```
 
@@ -36,10 +40,10 @@ git clone https://github.com/ocornut/imgui --branch v1.91.6
 
 - `root/`
     - `imgui/`
-    - `IM_RadarSites/`
+    - `IM_Maps/`
 2. Build with CMake, e.g.:
 ```shell
-cd IM_RadarSites
+cd IM_Maps
 mkdir build
 cd build
 cmake ..
