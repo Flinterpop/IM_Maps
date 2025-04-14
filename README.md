@@ -36,7 +36,7 @@ git clone https://github.com/ocornut/imgui --branch=docking
 
 or if the current version of ImGui has relevant breaking changes clone ImGui with this branch number:
 ```
-git clone https://github.com/ocornut/imgui --branch v1.91.6
+git clone https://github.com/ocornut/imgui --branch v1.91.9
 ```
 
 - `root/`
