@@ -1,9 +1,6 @@
 # IM_Maps
 Based on private repo: IM_RadarSites
 
-ImGui version of FMX Radar Sites
-Branched from immaps
-
 14 Apr 2025 Version
 slippy map tile background with a single SRTM elevation grid shown.
 
