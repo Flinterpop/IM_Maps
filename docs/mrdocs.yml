@@ -1,0 +1,3 @@
+source-root: ../common
+multipage: false
+generator: adoc
