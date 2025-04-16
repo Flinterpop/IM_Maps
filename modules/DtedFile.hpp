@@ -91,7 +91,8 @@ public:
        height = columns[indexI][indexJ];
        //printf("Height at %7.4f %8.4f\r\nDelta Lat/Lng: %f %f  indices: %d %d is %d\r\n", lat, lng, deltaLat,deltaLng, indexI, indexJ,height);
        i = indexI;
-       j = indexJ;
+       j = VIEW_TEX_SIZE - indexJ;
+       //printf(">>>>>>>>>>i/j2: %d %d \r\n", i, j);
        return height;
    }
 

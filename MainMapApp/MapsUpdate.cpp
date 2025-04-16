@@ -24,7 +24,7 @@
 
 #include "DtedFile.hpp"
 DtedFile dt;
-int DTEDAlpha = 32;
+int DTEDAlpha = 128;
 ImColor DTEDBlend = ImColor(255, 255, 255, DTEDAlpha);
 
 
@@ -68,10 +68,24 @@ bool CreatingLOSLine = false;
 bool LOSLineValid = false;
 ImVec2Double LOS_p1;
 ImVec2Double LOS_p2;
+int LOS_ij_p1_x=5;
+int LOS_ij_p1_y=5;
+int LOS_ij_p2_x=120;
+int LOS_ij_p2_y=20;
+
 
 void CreateLOSLine(ImVec2Double m_LeftClickLocationLL)
 {
     LOS_p1 = m_LeftClickLocationLL;
+    printf("CreateLOS: %7.4f  %8.4f\r\n", LOS_p1.x, LOS_p1.y);
+
+    int indexI, indexJ;
+    dt.heightAt((LOS_p1.x), (LOS_p1.y), indexI, indexJ);
+    printf("CreateLOSLine: i/j2: %d %d \r\n", indexI, indexJ);
+    LOS_ij_p1_x = indexI;
+    LOS_ij_p1_y = indexJ;
+
+
     CreatingLOSLine = true;
 }
 
@@ -83,6 +97,12 @@ bool CanvasDemo(bool pOpen)
         static int numSquares = 100;
         static int start_i = 10;
         static int start_j = 10;
+        if (true)//LOSLineValid)
+        {
+            char buf[100];
+            sprintf(buf, "i/j2  %d %d  i/j2 %d %d", LOS_ij_p1_x, LOS_ij_p1_y, LOS_ij_p2_x, LOS_ij_p2_y);
+            ImGui::Text(buf);
+        }
         ImGui::SliderInt("Col", &start_i, 0, 3600-50);
         ImGui::SliderInt("Row", &start_j, 0, 3600-50);
         // Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
@@ -149,6 +169,41 @@ bool CanvasDemo(bool pOpen)
             }
 
 
+  
+        int j = LOS_ij_p1_x; int i = LOS_ij_p1_y;
+        int cval = dt.DtedImage[start_j + j][start_i + i][0];
+        draw_list->AddRectFilled(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(0, 255, 0, 255));
+        draw_list->AddRect(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(255, 255, 255, 32));
+
+        j = LOS_ij_p2_x;  i = LOS_ij_p2_y;
+        cval = dt.DtedImage[start_j + j][start_i + i][0];
+        draw_list->AddRectFilled(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(0, 0, 255, 255));
+        draw_list->AddRect(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(255, 255, 255, 32));
+
+        int width = LOS_ij_p2_x - LOS_ij_p1_x;
+        int height = LOS_ij_p2_y - LOS_ij_p1_y;
+
+        int m_new = 2 * (LOS_ij_p2_y - LOS_ij_p1_y);
+        int slope_error_new = m_new - (LOS_ij_p2_x - LOS_ij_p1_x);
+        for (int x = LOS_ij_p1_x, y = LOS_ij_p1_y; x <= LOS_ij_p2_x; x++) 
+        {
+            //printf("x/y: %d %d\r\n", x, y);
+            draw_list->AddRectFilled(ImVec2(canvas_p0.x + (x * sideLength), canvas_p0.y + (y * sideLength)), ImVec2(canvas_p0.x + (x + 1) * sideLength, canvas_p0.y + (y + 1) * sideLength), ImColor(0, 0, 255, 255));
+
+            // Add slope to increment angle formed 
+            slope_error_new += m_new;
+
+            // Slope error reached limit, time to 
+            // increment y and update slope error. 
+            if (slope_error_new >= 0) {
+                y++;
+                slope_error_new -= 2 * (LOS_ij_p2_x - LOS_ij_p1_x);
+            }
+        }
+
+
+
+
 
        /*
         const float GRID_STEP = 64.0f;
@@ -173,10 +228,10 @@ bool CanvasDemo(bool pOpen)
        
         if (is_hovered)
         {
-            ImVec2 p1 = ImVec2(canvas_p0.x + 50, canvas_p0.y + 50);
+            ImVec2 p1 = ImVec2(canvas_p0.x + 350, canvas_p0.y + 50);
 
             char buf[200];
-            sprintf(buf, "%4.0f  %4.0f   %4.0f %4.0f", io.MousePos.x, io.MousePos.y, mouse_pos_in_canvas.x, mouse_pos_in_canvas.y);
+            sprintf(buf, "%4.0f  %4.0f   %4.0f %4.0f\r\n%d %d ", io.MousePos.x, io.MousePos.y, mouse_pos_in_canvas.x, mouse_pos_in_canvas.y, (int)( mouse_pos_in_canvas.x/sideLength), (int)(mouse_pos_in_canvas.y/ sideLength));
             
             
             DrawBoxedText(buf, p1, IM_COL32_BLACK, IM_COL32_BLACK, IM_COL32_WHITE, 1.0f);
@@ -304,6 +359,8 @@ void Maps::UpdateApp()
         if (mb_showHelp) ShowHelp(&mb_showHelp);
         if (mShowGeoToolDialog) ShowGeoToolDialog(&mShowGeoToolDialog);
 
+
+        ///////////////////////
         ShowElevationProfile();
 
 
@@ -448,6 +505,8 @@ void Maps::ManageAndDrawMap()
             }
         }
 
+
+        ///////////////////////
         if (0 < dt.nptlat)
         {
             ImVec2 DTED_TL = LatLngToVPxy(43.0, -76.0);
@@ -459,7 +518,7 @@ void Maps::ManageAndDrawMap()
             ImVec2 p1 = LatLngToVPxy(lat, -76.0);
             ImVec2 p2 = LatLngToVPxy(lat, -75.0);
 
-
+            //horizontal line
             draw_list->AddLine(p1, p2,ImColor(255, 0, 255, 255));
 
 
@@ -472,9 +531,15 @@ void Maps::ManageAndDrawMap()
                 {
                     LOS_p2.x = g_MouseMngr.MouseLL.x;
                     LOS_p2.y = g_MouseMngr.MouseLL.y;
+                    int indexI, indexJ;
+                    dt.heightAt((g_MouseMngr.MouseLL.x), (g_MouseMngr.MouseLL.y), indexI, indexJ);
+                    LOS_ij_p2_x = indexI;
+                    LOS_ij_p2_y = indexJ;
+                   // printf("i/j2: %d %d \r\n", indexI, indexJ);
                 }
 
                 ImVec2 p2 = LatLngToVPxy(LOS_p2.x, LOS_p2.y);
+
 
                 draw_list->AddLine(p1, p2, ImColor(255, 0, 0, 255));
 
@@ -518,7 +583,7 @@ void Maps::ManageAndDrawMap()
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) //check for single click hovers
             {
                 int indexI, indexJ;
-                dt.heightAt(ProjYtoLat(MouseProjY), ProjX2Lng(MouseProjX), indexI, indexJ);
+                dt.heightAt((MouseProjY), (MouseProjX), indexI, indexJ);
                 //if (ac != NULL) ac->AircraftIsClicked(); //this will force the Aircraft's popup to appear
                 //if (rs != NULL) rs->RadarSiteIsClicked();
             }
