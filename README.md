@@ -29,7 +29,7 @@ Shows a window with a zoomed in region of the SRTM file.
 It was developed with ImGui v1.91.9 (Feb 2025) Docking branch. If you use a later version with breaking changes then you may need to update ImMaps to accomodate those changes.
 
 ## Build Instructions
-1. Clone this repository, [Im_RadarSites](https://github.com/flinterpop/IM_RadarSites), and [ImGui](https://github.com/ocornut/imgui) into a parent directory (name doesn't matter):
+1. Clone this repository, [Im_Maps](https://github.com/flinterpop/IM_Maps), and [ImGui](https://github.com/ocornut/imgui) into a parent directory (name doesn't matter):
 
 ```shell
 mkdir root
