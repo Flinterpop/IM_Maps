@@ -95,7 +95,11 @@ set(
 	Modules/route.cpp
 	Modules/DtedFile.hpp
 	Modules/DtedFile.cpp
-		
+	Modules/GeoElevation.h
+	Modules/GeoElevation.cpp
+	Modules/imgui_plot.h
+	Modules/imgui_plot.cpp
+	
 	shapeFiles/safileio.c
 	shapeFiles/shpopen.c
 	shapeFiles/shapefil.h		
