@@ -24,6 +24,8 @@ class DtedFile
 
     public:
         DtedFile() {};
+        DtedFile(float w, float n);
+
         bool loadData(char* fname);
         GLuint DTEDtoTexture();
 
@@ -31,17 +33,20 @@ class DtedFile
 protected:
    bool isVerifyChecksum() const { return verifyChecksum; }
 
-private:
 public: 
-    
+
     const static int VIEW_TEX_SIZE = 3600;
     static bool localScale;
     static int maxElevationForScale; 
-    //DtedFile dt;
-    GLuint DtedTexture;
+    GLuint DtedTexture = 0;
     GLubyte DtedImage[VIEW_TEX_SIZE][VIEW_TEX_SIZE][3]; // RGB storage
     
-    char* filename;
+    char filename[200];
+
+    double BL_Lat = 0;
+    double BL_Lng = 0;
+
+
 
     // Interpret signed-magnitude values from DTED file
     static short readValue(const unsigned char hbyte, const unsigned char lbyte);
@@ -89,10 +94,8 @@ public:
        int indexJ = VIEW_TEX_SIZE * deltaLat;
        int indexI = VIEW_TEX_SIZE - (VIEW_TEX_SIZE * deltaLng);
        height = columns[indexI][indexJ];
-       //printf("Height at %7.4f %8.4f\r\nDelta Lat/Lng: %f %f  indices: %d %d is %d\r\n", lat, lng, deltaLat,deltaLng, indexI, indexJ,height);
        i = indexI;
        j = VIEW_TEX_SIZE - indexJ;
-       //printf(">>>>>>>>>>i/j2: %d %d \r\n", i, j);
        return height;
    }
 

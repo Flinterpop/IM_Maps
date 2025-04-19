@@ -22,10 +22,7 @@
 
 #include "shapeFileModule.h"
 
-#include "DtedFile.hpp"
-DtedFile dt;
-int DTEDAlpha = 128;
-ImColor DTEDBlend = ImColor(255, 255, 255, DTEDAlpha);
+#include "GeoElevation.h"
 
 
 bool ClipCheck(int x, int y, int limit);
@@ -60,233 +57,10 @@ ImVec2 Maps::m_VP_NormalCentre; //centre of viewport in normal coords
 double Maps::m_WorldSideLengthInPixels;
 ImVec2 Maps::m_canvas_Centre;
 
-
-int DtedRow = 1800;
-int DtedCol = 900;
-
-bool CreatingLOSLine = false;
-bool LOSLineValid = false;
-ImVec2Double LOS_p1;
-ImVec2Double LOS_p2;
-int LOS_ij_p1_x=5;
-int LOS_ij_p1_y=5;
-int LOS_ij_p2_x=120;
-int LOS_ij_p2_y=20;
+extern bool CreatingLOSLine;    //from GeoElevation.cpp
+extern bool LOSLineValid;       //from GeoElevation.cpp
 
 
-void CreateLOSLine(ImVec2Double m_LeftClickLocationLL)
-{
-    LOS_p1 = m_LeftClickLocationLL;
-    printf("CreateLOS: %7.4f  %8.4f\r\n", LOS_p1.x, LOS_p1.y);
-
-    int indexI, indexJ;
-    dt.heightAt((LOS_p1.x), (LOS_p1.y), indexI, indexJ);
-    printf("CreateLOSLine: i/j2: %d %d \r\n", indexI, indexJ);
-    LOS_ij_p1_x = indexI;
-    LOS_ij_p1_y = indexJ;
-
-
-    CreatingLOSLine = true;
-}
-
-bool CanvasDemo(bool pOpen)
-{
-    if (ImGui::Begin("Canvas Demo",&pOpen))
-    {
-        static int sideLength = 10;
-        static int numSquares = 100;
-        static int start_i = 10;
-        static int start_j = 10;
-        if (true)//LOSLineValid)
-        {
-            char buf[100];
-            sprintf(buf, "i/j2  %d %d  i/j2 %d %d", LOS_ij_p1_x, LOS_ij_p1_y, LOS_ij_p2_x, LOS_ij_p2_y);
-            ImGui::Text(buf);
-        }
-        ImGui::SliderInt("Col", &start_i, 0, 3600-50);
-        ImGui::SliderInt("Row", &start_j, 0, 3600-50);
-        // Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
-        ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
-        ImVec2 canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
-        if (canvas_sz.x < 150.0f) canvas_sz.x = 150.0f;
-        if (canvas_sz.y < 150.0f) canvas_sz.y = 150.0f;
-
-        ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
-
-        // Draw border and background color
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
-        draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255, 255));
-        ImGuiIO& io = ImGui::GetIO();
-        // This will catch our interactions
-        ImGui::InvisibleButton("canvas", canvas_sz, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
-        const bool is_hovered = ImGui::IsItemHovered(); // Hovered
-        const bool is_active = ImGui::IsItemActive();   // Held
-       
-        const ImVec2 mouse_pos_in_canvas(io.MousePos.x - canvas_p0.x, io.MousePos.y - canvas_p0.y);
-
-        if (is_active)
-        {
-            start_i -= io.MouseDelta.x;
-            if (start_i < 0) start_i = 0;
-            start_j -= io.MouseDelta.y;
-            if (start_j < 0) start_j = 0;
-        }
-
-        if (is_hovered) //if mouse is over this window then check for Zoom
-        {
-            if (0 != io.MouseWheel) //mouse wheel has moved so Zoom over and around the current mouse location
-            {
-                if (io.MouseWheel > 0) numSquares += 25;
-                if (io.MouseWheel < 0) numSquares -= 25;
-                sideLength = 1000 / numSquares;
-                printf("Num Squares Per side: %d Side Length: %d\r\n", numSquares, sideLength);
-
-            }
-        }
-
-
-
-
-        
-
-        // Draw grid + all lines in the canvas
-        draw_list->PushClipRect(canvas_p0, canvas_p1, true);
-
-
-        for (int j =0;j< numSquares;j++)
-            for (int i = 0;i < numSquares;i++)
-            {
-                char buf[20];
-                int height = dt.columns[start_i+i][start_j+j];
-                sprintf(buf, "\r\n     %d", height);
-                int cval = dt.DtedImage[start_j + j][start_i + i][0];
-
-                draw_list->AddRectFilled(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(cval,cval,cval, 255));
-                draw_list->AddRect(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(255, 255, 255, 32));
-                //draw_list->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(canvas_p0.x + i* sideLength, canvas_p0.y + j* sideLength), IM_COL32(255, 255, 255, 255), buf);
-
-            }
-
-
-  
-        int j = LOS_ij_p1_x; int i = LOS_ij_p1_y;
-        int cval = dt.DtedImage[start_j + j][start_i + i][0];
-        draw_list->AddRectFilled(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(0, 255, 0, 255));
-        draw_list->AddRect(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(255, 255, 255, 32));
-
-        j = LOS_ij_p2_x;  i = LOS_ij_p2_y;
-        cval = dt.DtedImage[start_j + j][start_i + i][0];
-        draw_list->AddRectFilled(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(0, 0, 255, 255));
-        draw_list->AddRect(ImVec2(canvas_p0.x + (i * sideLength), canvas_p0.y + (j * sideLength)), ImVec2(canvas_p0.x + (i + 1) * sideLength, canvas_p0.y + (j + 1) * sideLength), ImColor(255, 255, 255, 32));
-
-        int width = LOS_ij_p2_x - LOS_ij_p1_x;
-        int height = LOS_ij_p2_y - LOS_ij_p1_y;
-
-        int m_new = 2 * (LOS_ij_p2_y - LOS_ij_p1_y);
-        int slope_error_new = m_new - (LOS_ij_p2_x - LOS_ij_p1_x);
-        for (int x = LOS_ij_p1_x, y = LOS_ij_p1_y; x <= LOS_ij_p2_x; x++) 
-        {
-            //printf("x/y: %d %d\r\n", x, y);
-            draw_list->AddRectFilled(ImVec2(canvas_p0.x + (x * sideLength), canvas_p0.y + (y * sideLength)), ImVec2(canvas_p0.x + (x + 1) * sideLength, canvas_p0.y + (y + 1) * sideLength), ImColor(0, 0, 255, 255));
-
-            // Add slope to increment angle formed 
-            slope_error_new += m_new;
-
-            // Slope error reached limit, time to 
-            // increment y and update slope error. 
-            if (slope_error_new >= 0) {
-                y++;
-                slope_error_new -= 2 * (LOS_ij_p2_x - LOS_ij_p1_x);
-            }
-        }
-
-
-
-
-
-       /*
-        const float GRID_STEP = 64.0f;
-        for (float x = 0; x < canvas_sz.x; x += GRID_STEP)
-            draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(255, 255, 255, 255));
-        
-        for (float y = 0; y < canvas_sz.y; y += GRID_STEP)
-            draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(255, 255, 255, 255));
-
-        int i = 0, j = 0;
-        for (float x = 0; x < canvas_sz.x; x += GRID_STEP)
-        {
-            for (float y = 0; y < canvas_sz.y; y += GRID_STEP)
-            {
-                char buf[20];
-                sprintf(buf, "\r\n     %d", dt.columns[i][j++]);
-                draw_list->AddText(ImGui::GetFont(), ImGui::GetFontSize(), ImVec2(canvas_p0.x + x, canvas_p0.y + y), IM_COL32(255, 255, 255, 255), buf);
-            }
-            ++i;
-        }
-        */
-       
-        if (is_hovered)
-        {
-            ImVec2 p1 = ImVec2(canvas_p0.x + 350, canvas_p0.y + 50);
-
-            char buf[200];
-            sprintf(buf, "%4.0f  %4.0f   %4.0f %4.0f\r\n%d %d ", io.MousePos.x, io.MousePos.y, mouse_pos_in_canvas.x, mouse_pos_in_canvas.y, (int)( mouse_pos_in_canvas.x/sideLength), (int)(mouse_pos_in_canvas.y/ sideLength));
-            
-            
-            DrawBoxedText(buf, p1, IM_COL32_BLACK, IM_COL32_BLACK, IM_COL32_WHITE, 1.0f);
-        }
-
-        draw_list->PopClipRect();
-
-        ImGui::End();
-    }
-    return pOpen;
-}
-
-bool ShowElevationProfile()
-{
-    ImGui::Begin("Elevation", 0);
-    struct Funcs
-    {
-        static float DTED(void*, int j) { return dt.columns[j][DtedRow]; }
-    };
-    static int display_count = 3600;
-    //ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8);
-    ImGui::SliderInt("Row", &DtedRow, 0, 3600);
-    ImGui::SliderInt("Sample count", &display_count, 1, 3600);
-    float (*func)(void*, int) = Funcs::DTED;
-    ImGui::PlotLines("Lines##1", func, NULL, display_count, 0, NULL, 0, 800.0f, ImVec2(1000, 400));
-
-    ImGui::Separator();
-
-
-    float (*func2)(void*, int) = Funcs::DTED;
-    ImGui::PlotLines("Lines##2", func2, NULL, display_count, 0, NULL, 0, 800.0f, ImVec2(1000, 400));
-
-
-    if (ImGui::Button("Grid"))
-    {
-        for (int j = 0;j < 10;j++)
-        {
-            for (int i = 0;i < 10;i++)
-                printf("%03d ", dt.columns[j][i]);
-                printf("\r\n");
-        }
-
-    }
-
-
-
-
-
-    ImGui::End();
-
-    CanvasDemo(true);
-    
-
-    return false;
-}
 
 void Maps::UpdateApp()
 {
@@ -309,6 +83,7 @@ void Maps::UpdateApp()
         ManageAndDrawMap();
 
         #pragma region DrawOverlays
+
         if (mb_ShowBigX)
         {
             ImGui::GetWindowDrawList()->AddLine(canvas_pTL, canvas_pBR, IM_COL32(128, 0, 0, 255), 1.0f);
@@ -327,6 +102,7 @@ void Maps::UpdateApp()
         //DrawAllAircraftFromList(ImGui::GetWindowDrawList(), FuncPtr);
         //DrawADSBAircraft(ImGui::GetWindowDrawList(), FuncPtr);
 
+        DrawDTEDLOS(FuncPtr);
 
         DrawTimeAndPosDisplay();
         DrawToolBar();
@@ -359,9 +135,13 @@ void Maps::UpdateApp()
         if (mb_showHelp) ShowHelp(&mb_showHelp);
         if (mShowGeoToolDialog) ShowGeoToolDialog(&mShowGeoToolDialog);
 
+        ShowDTEDCellInfo();
 
-        ///////////////////////
-        ShowElevationProfile();
+        ///////////////////////DTED
+        //ElevationProfileWindow();
+        //ElevationTileWindow(true);
+        //bool showMe = true;
+        //ShowCellInfo(&showMe);
 
 
     #pragma endregion OtherWindows
@@ -505,55 +285,9 @@ void Maps::ManageAndDrawMap()
             }
         }
 
-
-        ///////////////////////
-        if (0 < dt.nptlat)
-        {
-            ImVec2 DTED_TL = LatLngToVPxy(43.0, -76.0);
-            ImVec2 DTED_BR = LatLngToVPxy(42.0, -75.0);
-            draw_list->AddImage((ImTextureID)(intptr_t)dt.DtedTexture, DTED_TL, DTED_BR, { 0,0 }, { 1,1 }, ImColor(255,255,255,DTEDAlpha));
-
-            double lat = 42.0 + DtedRow / 3600.0;
-            double lng = -77.0 + DtedCol / 3600.0;
-            ImVec2 p1 = LatLngToVPxy(lat, -76.0);
-            ImVec2 p2 = LatLngToVPxy(lat, -75.0);
-
-            //horizontal line
-            draw_list->AddLine(p1, p2,ImColor(255, 0, 255, 255));
-
-
-
-            if (CreatingLOSLine || LOSLineValid)
-            {
-                ImVec2 p1 = LatLngToVPxy(LOS_p1.x, LOS_p1.y);
-
-                if (false == LOSLineValid)
-                {
-                    LOS_p2.x = g_MouseMngr.MouseLL.x;
-                    LOS_p2.y = g_MouseMngr.MouseLL.y;
-                    int indexI, indexJ;
-                    dt.heightAt((g_MouseMngr.MouseLL.x), (g_MouseMngr.MouseLL.y), indexI, indexJ);
-                    LOS_ij_p2_x = indexI;
-                    LOS_ij_p2_y = indexJ;
-                   // printf("i/j2: %d %d \r\n", indexI, indexJ);
-                }
-
-                ImVec2 p2 = LatLngToVPxy(LOS_p2.x, LOS_p2.y);
-
-
-                draw_list->AddLine(p1, p2, ImColor(255, 0, 0, 255));
-
-            }
-        }
-        else //load the one DTED file
-        {
-            if (dt.loadData("n42.dt2"))
-            {
-                dt.DTEDtoTexture();
-                std::cout << "loadData returned true (OK)\n";
-            }
-        }
-
+        ///////////////////////DTED
+        DrawElevationOverlay(FuncPtr);
+     
 
 
     #pragma endregion WorkOutAndDisplayMapTilesPlusPanZoom
@@ -583,7 +317,7 @@ void Maps::ManageAndDrawMap()
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) //check for single click hovers
             {
                 int indexI, indexJ;
-                dt.heightAt((MouseProjY), (MouseProjX), indexI, indexJ);
+                heightAt((MouseProjY), (MouseProjX), indexI, indexJ);
                 //if (ac != NULL) ac->AircraftIsClicked(); //this will force the Aircraft's popup to appear
                 //if (rs != NULL) rs->RadarSiteIsClicked();
             }
@@ -612,30 +346,7 @@ void Maps::ManageAndDrawMap()
                     mb_LeftClickMenuOpen = false;  //stops this menu from displaying
                 }
 
-                if (CreatingLOSLine)
-                {
-                    if (ImGui::MenuItem("Save LOS Line", NULL, false, true))
-                    {
-                        CreatingLOSLine = false;
-                        LOSLineValid = true;
-                        mb_LeftClickMenuOpen = false;  //stops this menu from displaying
-                    }
-                    if (ImGui::MenuItem("Cancel LOS Line", NULL, false, true))
-                    {
-                        CreatingLOSLine = false;
-                        mb_LeftClickMenuOpen = false;  //stops this menu from displaying
-                    }
-                    
-                }
-                else
-                {
-                    if (ImGui::MenuItem("Create LOS Line", NULL, false, true))
-                    {
-                        LOSLineValid = false;
-                        mb_LeftClickMenuOpen = false;  //stops this menu from displaying
-                        CreateLOSLine(m_LeftClickLocationLL);//, true);
-                    }
-                }
+                ElevationLeftClickMenu(mb_LeftClickMenuOpen, m_LeftClickLocationLL);
 
 
                 if (ImGui::MenuItem(ICON_FA_WINDOW_CLOSE " Close", NULL, false, true))
@@ -708,19 +419,13 @@ void Maps::CheckKeysPressed()
     if (ImGui::IsKeyPressed(ImGuiKey_Q)) { b_CentreOnAircraft = false; }
 
     if (ImGui::IsKeyPressed(ImGuiKey_G)) { mShowGeoToolDialog = !mShowGeoToolDialog; }
-    if (ImGui::IsKeyPressed(ImGuiKey_O)) {
-        DTEDAlpha -= 5; if (DTEDAlpha > 255) DTEDAlpha = 255;
-    }
-    
-    if (ImGui::IsKeyPressed(ImGuiKey_P)) { DTEDAlpha += 5; if (DTEDAlpha < 0) DTEDAlpha = 0;
-    }
-
-    if (ImGui::IsKeyPressed(ImGuiKey_I)) { dt.SetScaleLocal(); }
 
     if (ImGui::IsKeyPressed(ImGuiKey_S)) {
         LoadShapeFiles();
     }
-   
+
+    CheckElevationKeysPressed();
+
 }
 
 
@@ -955,8 +660,9 @@ void Maps::DrawTimeAndPosDisplay()
     double lngRad = DEG2RAD(g_MouseMngr.MouseLL.y);// *PI / 180;
     long retVal = Convert_Geodetic_To_MGRS(latRad, lngRad, g_MGRS_Precison, m_MGRS);
 
+
     int indexI, indexJ;
-    int heightInMetres = dt.heightAt(g_MouseMngr.MouseLL.x, g_MouseMngr.MouseLL.y,indexI, indexJ);
+    int heightInMetres = heightAt(g_MouseMngr.MouseLL.x, g_MouseMngr.MouseLL.y,indexI, indexJ);
 
     char MGRS_Pretty[30];
     MGRSPretty(m_MGRS, MGRS_Pretty);

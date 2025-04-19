@@ -106,7 +106,13 @@ void DtedFile::copyData(const DtedFile& org, const bool)
 
 
 int DtedFile::maxElevationForScale = 2000;
-bool DtedFile::localScale = true;
+bool DtedFile::localScale = false;
+
+DtedFile::DtedFile(float w, float n) { 
+    BL_Lat = n; 
+    BL_Lng = w; 
+}
+
 
 GLuint DtedFile::DTEDtoTexture()
 {
@@ -125,6 +131,7 @@ GLuint DtedFile::DTEDtoTexture()
                 if (val < min) min = val;
             }
         }
+
         scale = 256.0f / max;
         printf("DTED: Min: %d  max: %d  scale: %f\r\n", min, max, scale);
     }
@@ -150,6 +157,9 @@ GLuint DtedFile::DTEDtoTexture()
 
     return DtedTexture;
 }
+
+
+
 
 
 
@@ -359,8 +369,9 @@ bool DtedFile::readDtedData(std::istream& in)
             if (height > maxElev0) maxElev0 = height;
         }
         //setMinElevation(minElev0);
+        minElev = minElev0;
         //setMaxElevation(maxElev0);
-
+        maxElev = maxElev0;
         // Read data record footer and verify checksum
         dtedColumnFooter foot;
         in.read(reinterpret_cast<char*>(&foot), sizeof(foot));
