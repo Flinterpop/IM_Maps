@@ -157,6 +157,15 @@ void CheckElevationKeysPressed()
     }
     if (ImGui::IsKeyPressed(ImGuiKey_I)) { dt.SetScaleLocal(); }
     if (ImGui::IsKeyPressed(ImGuiKey_Y)) { LoadDTEDTiles(); }
+    if (ImGui::IsKeyPressed(ImGuiKey_T)) { 
+        if (CreatingLOSLine)
+        {
+            ImVec2Double lt = LOS_p1;
+            LOS_p1 = LOS_p2_Creating;
+            LOS_p2_Creating = lt;
+        }
+    }
+
 }
 
 
@@ -299,10 +308,10 @@ bool LOSProfileWindow(ImVec2Double p2)
 
     double deltaD = 1852.0 * rb.x / (float)ArrayLength;
 
-    ImGui::Text("Samples: %d Spacing %0.2f [m]", ArrayLength, deltaD);
+    ImGui::Text("Samples: %d, Spacing %0.2f [m]", ArrayLength, deltaD);
 
     ImGui::Separator();
-
+    ImGui::Text("Green: LOS Flat Earth\r\nRed LOS with 4/3R Earth Model - Earth drop: 6.08 meters per km");
     double mp_x;
     double mp_y;
     float max = 0;
@@ -338,7 +347,7 @@ bool LOSProfileWindow(ImVec2Double p2)
     conf.values.ys_count = 2;
     conf.values.colors = colors;
     conf.scale.min = 0;
-    conf.scale.max = 1000;
+    conf.scale.max = max + 100; //1000;
     conf.tooltip.show = true;
     conf.tooltip.format = "%.2f nm, %.0f m MSL";
     conf.grid_x.show = false;
