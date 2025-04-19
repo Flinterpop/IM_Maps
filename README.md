@@ -4,7 +4,8 @@ Based on private repo: IM_RadarSites which in turn was based on these two repos:
 
 Dear IMGUI https://github.com/ocornut/imgui
 
-The slippy webmap tile code is based on the maps demo from https://github.com/epezent/implot_demos
+The slippy webmap tile code is based on the maps demo from https://github.com/epezent/implot_demos.
+
 LOS Profile Line uses https://github.com/soulthreads/imgui-plot
 
 
