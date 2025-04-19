@@ -6,6 +6,11 @@ Dear IMGUI https://github.com/ocornut/imgui
 
 The slippy webmap tile code is based on the maps demo from https://github.com/epezent/implot_demos
 
+### 19 Apr Version
+
+![image](https://github.com/user-attachments/assets/ded0d84e-26f7-47ae-b124-f8605dfd98d0)
+
+
 
 ### 14 Apr 2025 Version
 slippy map tile background with a single SRTM elevation grid shown.
